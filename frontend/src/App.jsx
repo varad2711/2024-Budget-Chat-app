@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Button } from './components/ui/button'
-import './App.css'
 import Header from './ui components/Header'
-import Sidebar from './ui components/Sidebar' // Ensure you import the Sidebar component
+import Sidebar from './ui components/Sidebar'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Textarea } from './components/ui/textarea'
+import axios from 'axios'
 
 function SendIcon (props) {
   return (
@@ -26,7 +26,7 @@ function SendIcon (props) {
   )
 }
 
-function App () {
+function App() {
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([])
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -43,24 +43,36 @@ function App () {
       }
       setMessages(prevMessages => [...prevMessages, newMessage])
       setInput('')
-      const response = await fetchAIResponse(input)
-      const aiMessage = {
-        id: messages.length + 2,
-        text: response,
-        sender: 'AI',
-        timestamp: new Date().toLocaleTimeString()
+      try {
+        const response = await fetchAIResponse(input)
+        const aiMessage = {
+          id: messages.length + 2,
+          text: response,
+          sender: 'AI',
+          timestamp: new Date().toLocaleTimeString()
+        }
+        setMessages(prevMessages => [...prevMessages, aiMessage])
+      } catch (error) {
+        console.error('Error fetching AI response:', error)
       }
-      setMessages(prevMessages => [...prevMessages, aiMessage])
     }
   }
 
   const fetchAIResponse = async prompt => {
-    return "I currently can't provide AI response, but I'm an AI-based chat app!"
+    try {
+      const response = await axios.post('http://localhost:5000/api/prompt', {
+        prompt
+      })
+      return response.data.response
+    } catch (error) {
+      console.error('Error fetching AI response:', error)
+      return 'Error fetching response'
+    }
   }
 
   return (
     <div className='font-container'>
-      <Header />{' '}
+      <Header />
       <div className='my-4 mx-4'>
         <Button variant='outline' onClick={toggleSidebar}>
           Toggle Sidebar
